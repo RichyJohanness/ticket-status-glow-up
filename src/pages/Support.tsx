@@ -3,15 +3,24 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { Ticket, MessageSquarePlus, Search } from 'lucide-react';
+import { HeadphonesIcon, MessageSquare, Zap, Shield, Clock, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import SuccessNotification from '@/components/SuccessNotification';
+
+interface FormData {
+  name: string;
+  email: string;
+  company: string;
+  type: string;
+  subject: string;
+  description: string;
+  priority: string;
+}
 
 const Support = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
     company: '',
@@ -20,16 +29,27 @@ const Support = () => {
     description: '',
     priority: 'medium'
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [createdTicketId, setCreatedTicketId] = useState('');
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const generateTicketId = () => {
+    const timestamp = Date.now();
+    return `TKT-${timestamp}`;
+  };
+
+  const sendEmailNotification = (ticketData: any) => {
+    // Simulate email sending
+    console.log('Email notification sent to IT Support, Management, and BD');
+    console.log('Ticket details:', ticketData);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,30 +57,26 @@ const Support = () => {
     setIsSubmitting(true);
 
     try {
-      // Generate ticket ID
-      const ticketId = `TKT-${Date.now()}`;
-      
-      // Store ticket in localStorage (in real app, this would be sent to backend)
-      const ticket = {
+      const ticketId = generateTicketId();
+      const ticketData = {
         id: ticketId,
         ...formData,
         status: 'open',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      
+
+      // Save to localStorage
       const existingTickets = JSON.parse(localStorage.getItem('supportTickets') || '[]');
-      existingTickets.push(ticket);
+      existingTickets.push(ticketData);
       localStorage.setItem('supportTickets', JSON.stringify(existingTickets));
 
-      // Simulate email notification
-      console.log('Email notification sent to IT Support, Management, and BD');
-      console.log('Ticket details:', ticket);
+      // Send email notification
+      sendEmailNotification(ticketData);
 
-      toast({
-        title: "Tiket Berhasil Dibuat",
-        description: `ID Tiket: ${ticketId}. Tim support akan menghubungi Anda segera.`,
-      });
+      // Show success notification
+      setCreatedTicketId(ticketId);
+      setShowNotification(true);
 
       // Reset form
       setFormData({
@@ -74,154 +90,139 @@ const Support = () => {
       });
 
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Gagal membuat tiket. Silakan coba lagi.",
-        variant: "destructive",
-      });
+      console.error('Error creating ticket:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const features = [
+    {
+      icon: Zap,
+      title: "Respon Cepat",
+      description: "Tim support merespons dalam 2-4 jam"
+    },
+    {
+      icon: HeadphonesIcon,
+      title: "Support 24/7",
+      description: "Layanan support tersedia sepanjang waktu"
+    },
+    {
+      icon: Shield,
+      title: "Keamanan Terjamin",
+      description: "Informasi Anda aman dan terlindungi"
+    },
+    {
+      icon: CheckCircle,
+      title: "Solusi Tepat",
+      description: "Tingkat penyelesaian masalah 95%"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-violet-100">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-violet-600 text-white py-12">
+      <div className="bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] text-white py-16">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4">Pusat Bantuan & Support</h1>
-            <p className="text-xl opacity-90">Kami siap membantu menyelesaikan masalah Anda</p>
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">Support Center</h1>
+            <p className="text-xl opacity-90 mb-6">Kami siap membantu menyelesaikan masalah Anda</p>
+            <div className="flex justify-center gap-4">
+              <Link to="/support/status">
+                <Button className="bg-white text-[#6f42c1] hover:bg-gray-100">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Cek Status Tiket
+                </Button>
+              </Link>
+              <Link to="/">
+                <Button variant="outline" className="border-white text-white hover:bg-white/10">
+                  Kembali ke Dashboard
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-8">
-          {/* Quick Actions */}
-          <div className="md:col-span-1">
-            <Card className="mb-6">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Form */}
+          <div className="lg:col-span-2">
+            <Card className="bg-white/80 backdrop-blur-sm shadow-xl">
               <CardHeader>
-                <CardTitle className="text-lg">Aksi Cepat</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Link to="/support/status" className="block">
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600">
-                    <Search className="w-4 h-4 mr-2" />
-                    Cek Status Tiket
-                  </Button>
-                </Link>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-2 border-gradient-to-r from-blue-500 to-violet-500"
-                  onClick={() => document.getElementById('support-form')?.scrollIntoView({ behavior: 'smooth' })}
-                >
-                  <MessageSquarePlus className="w-4 h-4 mr-2" />
-                  Buat Tiket Baru
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Jenis Bantuan</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                    <span>Komplain & Masalah Teknis</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Permintaan Fitur Baru</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span>Pertanyaan Umum</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                    <span>Konsultasi & Saran</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Support Form */}
-          <div className="md:col-span-2">
-            <Card id="support-form">
-              <CardHeader>
-                <CardTitle className="text-2xl flex items-center">
-                  <Ticket className="w-6 h-6 mr-2 text-blue-600" />
+                <CardTitle className="text-2xl flex items-center gap-2">
+                  <MessageSquare className="w-6 h-6 text-[#6f42c1]" />
                   Buat Tiket Support
                 </CardTitle>
                 <CardDescription>
-                  Isi form di bawah ini untuk mendapatkan bantuan dari tim support kami
+                  Lengkapi form di bawah ini untuk membuat tiket support baru
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nama Lengkap *</Label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Nama Lengkap *
+                      </label>
                       <Input
-                        id="name"
-                        name="name"
                         value={formData.name}
-                        onChange={handleInputChange}
-                        required
+                        onChange={(e) => handleInputChange('name', e.target.value)}
                         placeholder="Masukkan nama lengkap"
+                        required
+                        className="bg-white"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email *</Label>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email *
+                      </label>
                       <Input
-                        id="email"
-                        name="email"
                         type="email"
                         value={formData.email}
-                        onChange={handleInputChange}
+                        onChange={(e) => handleInputChange('email', e.target.value)}
+                        placeholder="nama@example.com"
                         required
-                        placeholder="email@contoh.com"
+                        className="bg-white"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Nama Perusahaan</Label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nama Perusahaan
+                    </label>
                     <Input
-                      id="company"
-                      name="company"
                       value={formData.company}
-                      onChange={handleInputChange}
+                      onChange={(e) => handleInputChange('company', e.target.value)}
                       placeholder="Nama perusahaan (opsional)"
+                      className="bg-white"
                     />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Jenis Permintaan *</Label>
-                      <Select onValueChange={(value) => handleSelectChange('type', value)} required>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Pilih jenis permintaan" />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Jenis Permohonan *
+                      </label>
+                      <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+                        <SelectTrigger className="bg-white">
+                          <SelectValue placeholder="Pilih jenis permohonan" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="complaint">Komplain & Masalah Teknis</SelectItem>
+                          <SelectItem value="complaint">Komplain</SelectItem>
                           <SelectItem value="feature">Permintaan Fitur Baru</SelectItem>
-                          <SelectItem value="question">Pertanyaan Umum</SelectItem>
-                          <SelectItem value="consultation">Konsultasi & Saran</SelectItem>
+                          <SelectItem value="question">Pertanyaan</SelectItem>
+                          <SelectItem value="consultation">Konsultasi</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="priority">Prioritas</Label>
-                      <Select 
-                        value={formData.priority} 
-                        onValueChange={(value) => handleSelectChange('priority', value)}
-                      >
-                        <SelectTrigger>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tingkat Prioritas *
+                      </label>
+                      <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+                        <SelectTrigger className="bg-white">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -234,44 +235,98 @@ const Support = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="subject">Subjek *</Label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subjek *
+                    </label>
                     <Input
-                      id="subject"
-                      name="subject"
                       value={formData.subject}
-                      onChange={handleInputChange}
+                      onChange={(e) => handleInputChange('subject', e.target.value)}
+                      placeholder="Ringkasan singkat masalah Anda"
                       required
-                      placeholder="Ringkasan singkat masalah atau permintaan"
+                      className="bg-white"
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Deskripsi Detail *</Label>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Deskripsi Lengkap *
+                    </label>
                     <Textarea
-                      id="description"
-                      name="description"
                       value={formData.description}
-                      onChange={handleInputChange}
-                      required
-                      rows={6}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
                       placeholder="Jelaskan masalah atau permintaan Anda secara detail..."
+                      rows={6}
+                      required
+                      className="bg-white resize-none"
                     />
                   </div>
 
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white font-semibold py-3"
+                    className="w-full bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] hover:from-[#0490cc] hover:via-[#5a359a] hover:to-[#cc1515] text-white py-3 text-lg font-semibold"
                   >
-                    {isSubmitting ? 'Mengirim...' : 'Kirim Tiket Support'}
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Memproses...
+                      </div>
+                    ) : (
+                      'Kirim Tiket Support'
+                    )}
                   </Button>
                 </form>
               </CardContent>
             </Card>
           </div>
+
+          {/* Features Sidebar */}
+          <div className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="text-xl">Mengapa Memilih Kami?</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {features.map((feature, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-[#05b2fd] to-[#6f42c1] rounded-lg flex items-center justify-center flex-shrink-0">
+                        <feature.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{feature.title}</h3>
+                        <p className="text-sm text-gray-600">{feature.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-r from-[#05b2fd] to-[#6f42c1] text-white">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-lg mb-2">Butuh Bantuan Segera?</h3>
+                <p className="text-sm opacity-90 mb-4">
+                  Untuk masalah mendesak, hubungi tim support kami langsung
+                </p>
+                <Button className="w-full bg-white text-[#6f42c1] hover:bg-gray-100">
+                  <HeadphonesIcon className="w-4 h-4 mr-2" />
+                  Hubungi Support
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
+
+      {/* Success Notification */}
+      <SuccessNotification
+        isVisible={showNotification}
+        onClose={() => setShowNotification(false)}
+        ticketId={createdTicketId}
+        ticketData={formData}
+      />
     </div>
   );
 };
