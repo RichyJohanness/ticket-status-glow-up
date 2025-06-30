@@ -1,140 +1,91 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit3, 
-  Trash2, 
-  Users, 
   Ticket, 
+  Users, 
   TrendingUp, 
-  Clock,
-  CheckCircle,
+  Clock, 
+  CheckCircle, 
   AlertCircle,
+  Search,
+  Filter,
+  Trash2,
+  Edit,
+  Eye,
   Calendar,
-  User,
-  MessageSquare
+  Mail,
+  User
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import Navbar from '@/components/Navbar';
 
 interface SupportTicket {
   id: string;
   name: string;
   email: string;
-  company: string;
-  type: string;
   subject: string;
-  description: string;
+  type: string;
   priority: string;
+  description: string;
   status: string;
   createdAt: string;
-  updatedAt: string;
 }
 
 const AdminDashboard = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [filteredTickets, setFilteredTickets] = useState<SupportTicket[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-
-  const [stats, setStats] = useState({
-    totalTickets: 0,
-    openTickets: 0,
-    inProgressTickets: 0,
-    resolvedTickets: 0,
-    avgResponseTime: '2h 30m'
-  });
+  const [showTicketDetail, setShowTicketDetail] = useState(false);
 
   useEffect(() => {
-    loadTickets();
+    // Load tickets from localStorage
+    const storedTickets = JSON.parse(localStorage.getItem('supportTickets') || '[]');
+    setTickets(storedTickets);
+    setFilteredTickets(storedTickets);
   }, []);
 
   useEffect(() => {
-    filterTickets();
-  }, [tickets, searchQuery, statusFilter, priorityFilter]);
-
-  const loadTickets = () => {
-    const storedTickets = JSON.parse(localStorage.getItem('supportTickets') || '[]');
-    setTickets(storedTickets);
-    
-    // Calculate stats
-    const totalTickets = storedTickets.length;
-    const openTickets = storedTickets.filter((t: SupportTicket) => t.status === 'open').length;
-    const inProgressTickets = storedTickets.filter((t: SupportTicket) => t.status === 'in-progress').length;
-    const resolvedTickets = storedTickets.filter((t: SupportTicket) => t.status === 'resolved').length;
-
-    setStats({
-      totalTickets,
-      openTickets,
-      inProgressTickets,
-      resolvedTickets,
-      avgResponseTime: '2h 30m'
-    });
-  };
-
-  const filterTickets = () => {
+    // Filter tickets based on search and filters
     let filtered = tickets;
 
-    // Search filter
-    if (searchQuery.trim() !== '') {
+    if (searchTerm) {
       filtered = filtered.filter(ticket => 
-        ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ticket.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ticket.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        ticket.subject.toLowerCase().includes(searchQuery.toLowerCase())
+        ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // Status filter
     if (statusFilter !== 'all') {
       filtered = filtered.filter(ticket => ticket.status === statusFilter);
     }
 
-    // Priority filter
     if (priorityFilter !== 'all') {
       filtered = filtered.filter(ticket => ticket.priority === priorityFilter);
     }
 
     setFilteredTickets(filtered);
-  };
+  }, [tickets, searchTerm, statusFilter, priorityFilter]);
 
   const updateTicketStatus = (ticketId: string, newStatus: string) => {
     const updatedTickets = tickets.map(ticket => 
-      ticket.id === ticketId 
-        ? { ...ticket, status: newStatus, updatedAt: new Date().toISOString() }
-        : ticket
+      ticket.id === ticketId ? { ...ticket, status: newStatus } : ticket
     );
-    
     setTickets(updatedTickets);
     localStorage.setItem('supportTickets', JSON.stringify(updatedTickets));
-    
-    toast({
-      title: "Status Updated",
-      description: `Ticket ${ticketId} status updated to ${getStatusText(newStatus)}`,
-    });
   };
 
   const deleteTicket = (ticketId: string) => {
     const updatedTickets = tickets.filter(ticket => ticket.id !== ticketId);
     setTickets(updatedTickets);
     localStorage.setItem('supportTickets', JSON.stringify(updatedTickets));
-    
-    toast({
-      title: "Ticket Deleted",
-      description: `Ticket ${ticketId} has been deleted successfully`,
-      variant: "destructive"
-    });
   };
 
   const getStatusColor = (status: string) => {
@@ -150,7 +101,7 @@ const AdminDashboard = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'open': return 'Baru';
-      case 'in-progress': return 'Sedang Diproses';
+      case 'in-progress': return 'Diproses';
       case 'resolved': return 'Selesai';
       case 'closed': return 'Ditutup';
       default: return 'Baru';
@@ -159,21 +110,21 @@ const AdminDashboard = () => {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'low': return 'text-green-600 bg-green-50';
+      case 'normal': return 'text-blue-600 bg-blue-50';
+      case 'high': return 'text-orange-600 bg-orange-50';
+      case 'urgent': return 'text-red-600 bg-red-50';
+      default: return 'text-gray-600 bg-gray-50';
     }
   };
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
       case 'low': return 'Rendah';
-      case 'medium': return 'Sedang';
+      case 'normal': return 'Normal';
       case 'high': return 'Tinggi';
       case 'urgent': return 'Mendesak';
-      default: return 'Sedang';
+      default: return priority;
     }
   };
 
@@ -187,236 +138,333 @@ const AdminDashboard = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
+  // Calculate statistics
+  const totalTickets = tickets.length;
+  const openTickets = tickets.filter(t => ['open', 'in-progress'].includes(t.status)).length;
+  const resolvedTickets = tickets.filter(t => t.status === 'resolved').length;
+  const urgentTickets = tickets.filter(t => t.priority === 'urgent').length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-violet-100">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] text-white py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-lg opacity-90 mt-2">Kelola semua tiket support dan monitor performa layanan</p>
+      <Navbar />
+      
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] text-white py-16">
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=5530&q=80')"
+          }}
+        ></div>
+        <div className="relative container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">Admin Dashboard</h1>
+            <p className="text-xl opacity-90">Kelola dan monitor semua tiket support</p>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-          {[
-            { icon: Ticket, label: 'Total Tiket', value: stats.totalTickets, color: 'from-[#05b2fd] to-[#6f42c1]' },
-            { icon: AlertCircle, label: 'Tiket Baru', value: stats.openTickets, color: 'from-blue-500 to-blue-600' },
-            { icon: Clock, label: 'Sedang Diproses', value: stats.inProgressTickets, color: 'from-yellow-500 to-orange-500' },
-            { icon: CheckCircle, label: 'Selesai', value: stats.resolvedTickets, color: 'from-green-500 to-green-600' },
-            { icon: TrendingUp, label: 'Avg Response', value: stats.avgResponseTime, color: 'from-[#ff1a1a] to-[#6f42c1]' }
-          ].map((stat, index) => (
-            <Card key={index} className="hover:shadow-lg transition-shadow bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <div className={`w-12 h-12 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center mb-4`}>
-                  <stat.icon className="w-6 h-6 text-white" />
+      <div className="container mx-auto px-4 -mt-8 relative z-10">
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm">Total Tiket</p>
+                  <p className="text-3xl font-bold text-gray-900">{totalTickets}</p>
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-                <p className="text-gray-600 text-sm">{stat.label}</p>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="w-12 h-12 bg-gradient-to-r from-[#05b2fd] to-[#6f42c1] rounded-lg flex items-center justify-center">
+                  <Ticket className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm">Tiket Aktif</p>
+                  <p className="text-3xl font-bold text-gray-900">{openTickets}</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-r from-[#6f42c1] to-[#ff1a1a] rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm">Selesai</p>
+                  <p className="text-3xl font-bold text-gray-900">{resolvedTickets}</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-r from-[#05b2fd] to-green-500 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-600 text-sm">Urgent</p>
+                  <p className="text-3xl font-bold text-gray-900">{urgentTickets}</p>
+                </div>
+                <div className="w-12 h-12 bg-gradient-to-r from-[#ff1a1a] to-[#6f42c1] rounded-lg flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Filters */}
-        <Card className="mb-8 bg-white/80 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Cari berdasarkan ID, nama, email, atau subjek..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+        {/* Filters and Search */}
+        <Card className="mb-8 bg-white/90 backdrop-blur-sm shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="w-5 h-5" />
+              Filter & Pencarian
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Pencarian</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Cari ID, subjek, nama..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Status</SelectItem>
-                  <SelectItem value="open">Baru</SelectItem>
-                  <SelectItem value="in-progress">Sedang Diproses</SelectItem>
-                  <SelectItem value="resolved">Selesai</SelectItem>
-                  <SelectItem value="closed">Ditutup</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter Prioritas" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Prioritas</SelectItem>
-                  <SelectItem value="low">Rendah</SelectItem>
-                  <SelectItem value="medium">Sedang</SelectItem>
-                  <SelectItem value="high">Tinggi</SelectItem>
-                  <SelectItem value="urgent">Mendesak</SelectItem>
-                </SelectContent>
-              </Select>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Status</label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Status</SelectItem>
+                    <SelectItem value="open">Baru</SelectItem>
+                    <SelectItem value="in-progress">Diproses</SelectItem>
+                    <SelectItem value="resolved">Selesai</SelectItem>
+                    <SelectItem value="closed">Ditutup</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Prioritas</label>
+                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Prioritas</SelectItem>
+                    <SelectItem value="low">Rendah</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">Tinggi</SelectItem>
+                    <SelectItem value="urgent">Mendesak</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-end">
+                <Button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setPriorityFilter('all');
+                  }}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Reset Filter
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Tickets Table */}
-        <Card className="bg-white/80 backdrop-blur-sm">
+        <Card className="bg-white/90 backdrop-blur-sm shadow-lg">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Ticket className="w-5 h-5" />
-              Daftar Tiket Support ({filteredTickets.length})
-            </CardTitle>
+            <CardTitle>Daftar Tiket Support ({filteredTickets.length})</CardTitle>
             <CardDescription>
-              Kelola dan monitor semua tiket support yang masuk
+              Kelola semua tiket support yang masuk
             </CardDescription>
           </CardHeader>
           <CardContent>
             {filteredTickets.length === 0 ? (
-              <div className="text-center py-12">
-                <Ticket className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Tiket</h3>
-                <p className="text-gray-500">
-                  {tickets.length === 0 
-                    ? 'Belum ada tiket support yang masuk.'
-                    : 'Tidak ada tiket yang sesuai dengan filter yang dipilih.'
-                  }
-                </p>
+              <div className="text-center py-8">
+                <Ticket className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Tidak ada tiket ditemukan</p>
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredTickets.map((ticket) => (
-                  <Card key={ticket.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg">{ticket.id}</h3>
-                            <Badge className={`${getStatusColor(ticket.status)} text-white`}>
-                              {getStatusText(ticket.status)}
-                            </Badge>
-                            <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
-                              {getPriorityText(ticket.priority)}
-                            </Badge>
-                          </div>
-                          
-                          <h4 className="font-medium text-gray-900 mb-2">{ticket.subject}</h4>
-                          
-                          <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4" />
-                              <span>{ticket.name} ({ticket.email})</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <MessageSquare className="w-4 h-4" />
-                              <span>{getTypeText(ticket.type)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>Dibuat: {formatDate(ticket.createdAt)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4" />
-                              <span>Update: {formatDate(ticket.updatedAt)}</span>
-                            </div>
-                          </div>
+                  <div key={ticket.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{ticket.id}</h3>
+                          <Badge className={`${getStatusColor(ticket.status)} text-white`}>
+                            {getStatusText(ticket.status)}
+                          </Badge>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
+                            {getPriorityText(ticket.priority)}
+                          </span>
                         </div>
                         
-                        <div className="flex flex-col gap-2">
-                          <div className="flex gap-2">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  Lihat
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-2xl">
-                                <DialogHeader>
-                                  <DialogTitle>Detail Tiket {ticket.id}</DialogTitle>
-                                  <DialogDescription>
-                                    Informasi lengkap tiket support
-                                  </DialogDescription>
-                                </DialogHeader>
-                                {selectedTicket && (
-                                  <div className="space-y-4">
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                      <div><strong>Nama:</strong> {selectedTicket.name}</div>
-                                      <div><strong>Email:</strong> {selectedTicket.email}</div>
-                                      <div><strong>Perusahaan:</strong> {selectedTicket.company}</div>
-                                      <div><strong>Jenis:</strong> {getTypeText(selectedTicket.type)}</div>
-                                      <div><strong>Prioritas:</strong> {getPriorityText(selectedTicket.priority)}</div>
-                                      <div><strong>Status:</strong> {getStatusText(selectedTicket.status)}</div>
-                                    </div>
-                                    <div>
-                                      <strong>Subjek:</strong>
-                                      <p className="mt-1">{selectedTicket.subject}</p>
-                                    </div>
-                                    <div>
-                                      <strong>Deskripsi:</strong>
-                                      <p className="mt-1 p-3 bg-gray-50 rounded-lg">{selectedTicket.description}</p>
-                                    </div>
-                                  </div>
-                                )}
-                              </DialogContent>
-                            </Dialog>
-                            
-                            <Select value={ticket.status} onValueChange={(value) => updateTicketStatus(ticket.id, value)}>
-                              <SelectTrigger className="w-32">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="open">Baru</SelectItem>
-                                <SelectItem value="in-progress">Diproses</SelectItem>
-                                <SelectItem value="resolved">Selesai</SelectItem>
-                                <SelectItem value="closed">Ditutup</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        <p className="text-gray-900 font-medium mb-1">{ticket.subject}</p>
+                        <p className="text-sm text-gray-600 mb-2">{getTypeText(ticket.type)}</p>
+                        
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <div className="flex items-center gap-1">
+                            <User className="w-4 h-4" />
+                            {ticket.name}
                           </div>
-                          
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="destructive" size="sm">
-                                <Trash2 className="w-4 h-4 mr-1" />
-                                Hapus
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Hapus Tiket</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Apakah Anda yakin ingin menghapus tiket {ticket.id}? 
-                                  Tindakan ini tidak dapat dibatalkan.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Batal</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteTicket(ticket.id)}>
-                                  Hapus
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
+                          <div className="flex items-center gap-1">
+                            <Mail className="w-4 h-4" />
+                            {ticket.email}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {new Date(ticket.createdAt).toLocaleDateString('id-ID')}
+                          </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedTicket(ticket);
+                            setShowTicketDetail(true);
+                          }}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+
+                        <Select
+                          value={ticket.status}
+                          onValueChange={(value) => updateTicketStatus(ticket.id, value)}
+                        >
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="open">Baru</SelectItem>
+                            <SelectItem value="in-progress">Diproses</SelectItem>
+                            <SelectItem value="resolved">Selesai</SelectItem>
+                            <SelectItem value="closed">Ditutup</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => deleteTicket(ticket.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Ticket Detail Modal */}
+      {showTicketDetail && selectedTicket && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{selectedTicket.id}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowTicketDetail(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Subjek</h4>
+                  <p>{selectedTicket.subject}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Nama</h4>
+                    <p>{selectedTicket.name}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Email</h4>
+                    <p>{selectedTicket.email}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-2">Jenis</h4>
+                    <p>{getTypeText(selectedTicket.type)}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Prioritas</h4>
+                    <span className={`px-2 py-1 rounded text-sm ${getPriorityColor(selectedTicket.priority)}`}>
+                      {getPriorityText(selectedTicket.priority)}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-2">Status</h4>
+                    <Badge className={`${getStatusColor(selectedTicket.status)} text-white`}>
+                      {getStatusText(selectedTicket.status)}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-2">Deskripsi</h4>
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="whitespace-pre-wrap">{selectedTicket.description}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-2">Tanggal Dibuat</h4>
+                  <p>{new Date(selectedTicket.createdAt).toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

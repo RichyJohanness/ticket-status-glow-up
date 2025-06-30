@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { 
   Ticket, 
   Users, 
@@ -16,9 +16,14 @@ import {
   Shield,
   Zap,
   HeadphonesIcon,
-  ArrowRight
+  ArrowRight,
+  HelpCircle,
+  FileText,
+  Settings,
+  Mail
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import Navbar from '@/components/Navbar';
 
 interface SupportTicket {
   id: string;
@@ -41,7 +46,7 @@ const Dashboard = () => {
   useEffect(() => {
     // Load tickets from localStorage
     const storedTickets = JSON.parse(localStorage.getItem('supportTickets') || '[]');
-    setTickets(storedTickets.slice(0, 5)); // Show only recent 5 tickets
+    setTickets(storedTickets.slice(0, 3)); // Show only recent 3 tickets
 
     // Calculate stats
     const totalTickets = storedTickets.length;
@@ -55,6 +60,60 @@ const Dashboard = () => {
       avgResponseTime: '2h 30m'
     });
   }, []);
+
+  const faqData = [
+    {
+      question: "Bagaimana cara membuat tiket support?",
+      answer: "Anda dapat membuat tiket support dengan mengklik tombol 'Buat Tiket' di navigasi atas, kemudian isi formulir dengan detail masalah atau permintaan Anda. Tim kami akan merespons dalam waktu 2-4 jam."
+    },
+    {
+      question: "Berapa lama waktu respons untuk tiket support?",
+      answer: "Rata-rata waktu respons kami adalah 2-4 jam untuk tiket dengan prioritas normal. Untuk tiket urgent, kami akan merespons dalam waktu 1 jam atau kurang."
+    },
+    {
+      question: "Bagaimana cara mengecek status tiket saya?",
+      answer: "Anda dapat mengecek status tiket dengan menggunakan ID tiket yang diberikan saat pembuatan tiket. Kunjungi halaman 'Status Tiket' dan masukkan ID tiket Anda."
+    },
+    {
+      question: "Jenis masalah apa saja yang bisa dilaporkan?",
+      answer: "Kami menerima berbagai jenis laporan termasuk: komplain teknis, permintaan fitur baru, pertanyaan umum, dan konsultasi teknis. Setiap tiket akan ditangani oleh tim yang tepat sesuai kategorinya."
+    },
+    {
+      question: "Apakah ada biaya untuk layanan support?",
+      answer: "Layanan support dasar kami gratis untuk semua pengguna. Untuk konsultasi mendalam atau support khusus, mungkin dikenakan biaya yang akan dikomunikasikan terlebih dahulu."
+    },
+    {
+      question: "Bagaimana cara menghubungi support untuk masalah urgent?",
+      answer: "Untuk masalah urgent, pilih prioritas 'Urgent' saat membuat tiket. Anda juga dapat menambahkan kata 'URGENT' di awal subjek tiket untuk mendapat perhatian lebih cepat."
+    }
+  ];
+
+  const usageSteps = [
+    {
+      step: 1,
+      title: "Buat Tiket Support",
+      description: "Klik tombol 'Buat Tiket' dan isi formulir dengan detail masalah Anda",
+      icon: Ticket
+    },
+    {
+      step: 2,
+      title: "Dapatkan ID Tiket",
+      description: "Setelah berhasil, Anda akan mendapat ID tiket unik untuk tracking",
+      icon: FileText
+    },
+    {
+      step: 3,
+      title: "Tunggu Respons",
+      description: "Tim kami akan merespons tiket Anda dalam waktu 2-4 jam",
+      icon: Clock
+    },
+    {
+      step: 4,
+      title: "Cek Status",
+      description: "Gunakan ID tiket untuk mengecek status dan update terbaru",
+      icon: CheckCircle
+    }
+  ];
 
   const features = [
     {
@@ -76,27 +135,6 @@ const Dashboard = () => {
       icon: Star,
       title: "Kualitas Terbaik",
       description: "Tingkat kepuasan pelanggan 98% berdasarkan survey"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Andi Pratama",
-      company: "PT. Teknologi Maju",
-      message: "Layanan support yang sangat responsif dan profesional. Masalah kami selalu diselesaikan dengan cepat.",
-      rating: 5
-    },
-    {
-      name: "Sari Dewi",
-      company: "CV. Digital Solutions",
-      message: "Tim support sangat membantu dalam implementasi fitur baru. Komunikasi yang jelas dan solusi yang tepat.",
-      rating: 5
-    },
-    {
-      name: "Budi Santoso",
-      company: "Startup Innovation",
-      message: "Impressed dengan kecepatan respon dan kualitas solusi yang diberikan. Highly recommended!",
-      rating: 5
     }
   ];
 
@@ -122,16 +160,24 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-violet-100">
-      {/* Hero Section */}
+      <Navbar />
+
+      {/* Hero Section with Image */}
       <div className="relative bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-black/30"></div>
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=3882&q=80')"
+          }}
+        ></div>
         <div className="relative container mx-auto px-4 py-20">
-          <div className="text-center animate-fade-in">
+          <div className="text-center animate-fade-in max-w-4xl mx-auto">
             <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-[fade-in_1s_ease-out]">
-              Support Center
+              Antlia Support Center
             </h1>
             <p className="text-xl md:text-2xl mb-8 opacity-90 animate-[fade-in_1s_ease-out_0.3s_both]">
-              Solusi terbaik untuk semua kebutuhan dukungan teknis Anda
+              Pusat bantuan terpadu untuk semua kebutuhan teknis dan dukungan Anda
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-[fade-in_1s_ease-out_0.6s_both]">
               <Link to="/support">
@@ -181,10 +227,61 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* How to Use Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Cara Menggunakan Layanan Support</h2>
+          <p className="text-xl text-gray-600">Ikuti langkah-langkah sederhana ini untuk mendapatkan bantuan</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {usageSteps.map((step, index) => (
+            <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-r from-[#05b2fd] to-[#6f42c1] flex items-center justify-center">
+                  <step.icon className="w-8 h-8 text-white" />
+                </div>
+                <div className="w-8 h-8 mx-auto mb-4 rounded-full bg-gradient-to-r from-[#ff1a1a] to-[#6f42c1] flex items-center justify-center text-white font-bold">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+          <p className="text-xl text-gray-600">Pertanyaan yang sering diajukan beserta jawabannya</p>
+        </div>
+
+        <div className="max-w-4xl mx-auto">
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqData.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`} className="bg-white/80 backdrop-blur-sm rounded-lg border px-6">
+                <AccordionTrigger className="text-left font-semibold text-gray-900 hover:text-[#6f42c1] transition-colors">
+                  <div className="flex items-center gap-3">
+                    <HelpCircle className="w-5 h-5 text-[#05b2fd]" />
+                    {faq.question}
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-600 pt-4">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </div>
+
       {/* Features Section */}
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Mengapa Memilih Kami?</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Mengapa Memilih Antlia Support?</h2>
           <p className="text-xl text-gray-600">Layanan support terbaik dengan standar profesional</p>
         </div>
 
@@ -239,55 +336,32 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Testimonials Carousel */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Apa Kata Pelanggan Kami</h2>
-          <p className="text-xl text-gray-600">Testimoni dari berbagai perusahaan yang telah mempercayai layanan kami</p>
-        </div>
-
-        <Carousel className="max-w-4xl mx-auto">
-          <CarouselContent>
-            {testimonials.map((testimonial, index) => (
-              <CarouselItem key={index}>
-                <Card className="bg-white/80 backdrop-blur-sm">
-                  <CardContent className="p-8 text-center">
-                    <div className="flex justify-center mb-4">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-                      ))}
-                    </div>
-                    <blockquote className="text-lg text-gray-700 mb-6 italic">
-                      "{testimonial.message}"
-                    </blockquote>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                      <p className="text-gray-600">{testimonial.company}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious />
-          <CarouselNext />
-        </Carousel>
-      </div>
-
       {/* CTA Section */}
       <div className="bg-gradient-to-r from-[#05b2fd] via-[#6f42c1] to-[#ff1a1a] text-white py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Butuh Bantuan Sekarang?</h2>
           <p className="text-xl mb-8 opacity-90">Tim support kami siap membantu menyelesaikan masalah Anda</p>
-          <Link to="/support">
-            <Button 
-              size="lg" 
-              className="bg-white text-[#6f42c1] hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Hubungi Support
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/support">
+              <Button 
+                size="lg" 
+                className="bg-white text-[#6f42c1] hover:bg-gray-100 px-8 py-4 text-lg font-semibold"
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Hubungi Support
+              </Button>
+            </Link>
+            <Link to="/support/status">
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white text-white hover:bg-white/10 px-8 py-4 text-lg font-semibold"
+              >
+                <Mail className="w-5 h-5 mr-2" />
+                Cek Status Tiket
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
